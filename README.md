@@ -71,7 +71,7 @@ lastBlockClass = __NSStackBlock__
 
 ### 2.1 block 的3种类型在内存中的分配
 
-![](https://lh3.googleusercontent.com/kB3iPEIe_xJhbB2qqHdHaB9v34HSLbphjPgKtS5qVInr4KhWIAaymkw3AuE2JB23qxa-EORw0j-RisnUXlF8U48Yi_vT8M9CX-QvC9bFBd0yWFlbMl83WoOK6o7AClG2X2Z1X5xjLv54IM_qfaEbC5MeYRfJ9aWvqJocsUcJN_hd0ZvQUUVwSUxmh5ifzLmXJ3jnbNsjOI-y6zS7K21g7j4hAI9n3zyd_LIBukhrRdYpGpTQIdKwRTzbBEnkZ8UU-QSD6dF_tHvitIngs6PSPI5dU-s0iEAcmN7scO9nqQoqcomn4b_WiqFjp00BucKbF5U1xm0fr-_jpQ97-on7cPoxDLMl4BE4-8coofCo2tslcxJRHZIoPjdrnJTifdLjepFkaWNps4paaPKja5OrLvEeOT5uDZJ31hST62_7N9KSoY-SMXwt1W4gUqlQY_FnXIN5pKP7WjDdShU7m_mpcYKCLivh_Fdv-l1n94ya1d7_AU6LPppwsDXWBHHNEvmDZljDzJER9JSuuLG_MuokKlQRz48LA2di2aPH9O-xPUL7pbKbm0fQv8li3XdA_Sj6jmYEUdl2iNi-mNVlCJZjwWo5FL_LoiFRbvrhYL7YOGEIzPxTBsIzB0QiuQqkCH8=w1652-h1288-no)
+![内存分配](https://lh3.googleusercontent.com/kB3iPEIe_xJhbB2qqHdHaB9v34HSLbphjPgKtS5qVInr4KhWIAaymkw3AuE2JB23qxa-EORw0j-RisnUXlF8U48Yi_vT8M9CX-QvC9bFBd0yWFlbMl83WoOK6o7AClG2X2Z1X5xjLv54IM_qfaEbC5MeYRfJ9aWvqJocsUcJN_hd0ZvQUUVwSUxmh5ifzLmXJ3jnbNsjOI-y6zS7K21g7j4hAI9n3zyd_LIBukhrRdYpGpTQIdKwRTzbBEnkZ8UU-QSD6dF_tHvitIngs6PSPI5dU-s0iEAcmN7scO9nqQoqcomn4b_WiqFjp00BucKbF5U1xm0fr-_jpQ97-on7cPoxDLMl4BE4-8coofCo2tslcxJRHZIoPjdrnJTifdLjepFkaWNps4paaPKja5OrLvEeOT5uDZJ31hST62_7N9KSoY-SMXwt1W4gUqlQY_FnXIN5pKP7WjDdShU7m_mpcYKCLivh_Fdv-l1n94ya1d7_AU6LPppwsDXWBHHNEvmDZljDzJER9JSuuLG_MuokKlQRz48LA2di2aPH9O-xPUL7pbKbm0fQv8li3XdA_Sj6jmYEUdl2iNi-mNVlCJZjwWo5FL_LoiFRbvrhYL7YOGEIzPxTBsIzB0QiuQqkCH8=w1652-h1288-no)
 
 - `.text 区` (内存低地址)
     - 代码段,存放我们编写的代码 
@@ -184,5 +184,27 @@ void test4 () {
 }
 ```
 
+## 三. block 的 copy
 
+在 `ARC` 环境下,编译器在如下几种情况下,`会自动将栈上的 block 复制到堆上.`(为 block 保命,防止 block 自动销毁,从而使其内部值发生错乱)
+
+- block 作为函数返回值的时候.
+- block 被强指针引用的时候(赋值给__strong 指针)
+- block 作为 Cocoa API中方法名含有`usingBlock`的参数时候
+- block 作为 GCD 的方法参数时候.
+
+所以在`ARC`下,我们声明属性时,如下两种写法都是可以的,都会讲 block 复制到堆上.
+
+```objc
+@property (nonatomic, strong) void(^block)(void);
+
+// 建议这么写,使用 copy, 与 MRC 环境下保持一致
+@property (nonatomic, copy) void(^block)(void);
+```
+
+但是在`MRC`环境下,要写成`copy`
+
+```objc
+@property (nonatomic, copy) void(^block)(void);
+```
 
