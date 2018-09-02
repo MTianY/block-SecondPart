@@ -25,6 +25,7 @@
 /* Begin PBXFileReference section */
 		4C953C21213BE98C00DE211B /* block-2Part-1 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "block-2Part-1"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4C953C24213BE98C00DE211B /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		4C953C2B213BF10D00DE211B /* main1.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main1.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -57,6 +58,7 @@
 		4C953C23213BE98C00DE211B /* block-2Part-1 */ = {
 			isa = PBXGroup;
 			children = (
+				4C953C2B213BF10D00DE211B /* main1.cpp */,
 				4C953C24213BE98C00DE211B /* main.m */,
 			);
 			path = "block-2Part-1";
@@ -237,6 +239,7 @@
 		4C953C29213BE98C00DE211B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_OBJC_ARC = NO;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = JJGBDF7PM8;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -246,6 +249,7 @@
 		4C953C2A213BE98C00DE211B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_OBJC_ARC = NO;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = JJGBDF7PM8;
 				PRODUCT_NAME = "$(TARGET_NAME)";
