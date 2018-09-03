@@ -1,4 +1,3 @@
-[TOC]
 
 ## 一. block 最终继承自 NSObject
 
@@ -206,5 +205,264 @@ void test4 () {
 
 ```objc
 @property (nonatomic, copy) void(^block)(void);
+```
+
+## 四.对象类型的 auto 变量
+
+### 4.1 block 内部会捕获 TYPerson *person,只要 block 存在, TYPerson 就不会被提前释放掉
+
+```objc
+// 1. ARC 环境下,在 `NSLog(@"-");`处打断点, TYPerson 此时还没有被释放,因为 block 还在, block 持有它
+// 2. ARC 环境下,栈空间的 block 如果被强引用着,它默认会执行copy 操作.保命
+typedef void(^testBlock)(void);
+
+int main(int argc, const char * argv[]) {
+    @autoreleasepool {
+        
+        testBlock block;
+        
+        {
+            TYPerson *person = [[TYPerson alloc] init];
+            person.age = 30;
+            
+            block = ^{
+                NSLog(@"%d",person.age);
+            };
+             
+        }
+    
+        NSLog(@"-");
+        
+    }
+    return 0;
+}
+```
+
+同样的代码,在`MRC`环境下,情况不同:
+
+```objc
+// MRC 环境下
+// 在 NSLog(@"-") 处打断点,见到 TYPerson 被释放掉了
+typedef void(^testBlock)(void);
+
+int main(int argc, const char * argv[]) {
+    @autoreleasepool {
+        
+        testBlock block;
+        
+        {
+            TYPerson *person = [[TYPerson alloc] init];
+            person.age = 30;
+            
+            block = ^{
+                NSLog(@"%d",person.age);
+            };
+             
+        }
+    
+        NSLog(@"-");
+        
+    }
+    return 0;
+}
+```
+
+- 上面的代码在 `MRC` 环境下,在 `NSLog(@"-")` 处打断点, TYPerson 会被释放掉.
+- 因为在 `MRC` 环境下, 该 `block`因为访问了 `auto 变量`,所以这个 block 的类型是`__NSStackBlock__`,存在于`栈空间`.所以作用域结束后, block 销毁. TYPerson 也随之销毁.
+
+但是在`MRC`环境下,上述代码的 block 执行一次`copy`操作,如下:
+
+```objc
+typedef void(^testBlock)(void);
+
+int main(int argc, const char * argv[]) {
+    @autoreleasepool {
+        
+        testBlock block;
+        
+        {
+            TYPerson *person = [[TYPerson alloc] init];
+            person.age = 30;
+            
+            block = [^{
+                NSLog(@"%d",person.age);
+            } copy];
+             
+            [person release];
+        }
+    
+        NSLog(@"-");
+        
+    }
+    return 0;
+}
+```
+
+- 执行`copy`操作,将栈空间的 block 复制一份到堆上,那么 block 类型变为`__NSMallocBlock__`,作用域结束后 block 不会被释放掉.
+- 同时它会对 TYPerson 进行一次 retain 操作.使 TYPerson 不会被销毁
+
+
+### 4.2 __weak 和 __strong 修饰时,栈上 block 和 堆上的 block 的不同.
+
+如下代码:
+
+- 在`NSLog(@"-")` 处打断点的话,此时 TYPerson 已经被释放掉了.
+
+```objc
+typedef void(^testBlock)(void);
+
+int main(int argc, const char * argv[]) {
+    @autoreleasepool {
+        
+        testBlock block;
+        
+        {
+            TYPerson *person = [[TYPerson alloc] init];
+            person.age = 30;
+            
+            __weak TYPerson *weakPerson = person;
+            block = ^{
+                NSLog(@"%d",weakPerson.age);
+            };
+
+        }
+    
+        NSLog(@"-");
+        
+    }
+    return 0;
+}
+```
+
+上述代码编译成 c++ 文件:
+
+- 如果像之前 `xcrun -sdk iphoneos clang -arch arm64 -rewrite-objc main.m` 这个命令会报错:
+
+```linux
+ error: 
+      cannot create __weak reference because the current deployment target does
+      not support weak references
+            __attribute__((objc_ownership(weak))) TYPerson *weakPerson = person;
+                           ^
+1 error generated.
+```
+
+- 上面错误的原因是因为 `weak` 弱引用这种技术是需要运行时 runtime 支持的,像上面那种静态的编译时不行的.需要执行如下命令:
+
+```linux
+xcrun -sdk iphoneos clang -arch arm64 -rewrite-objc -fobjc-arc -fobjc-runtime=ios-8.0.0 main.m
+```
+
+编译成 c++ 文件后发现,捕获进来的 TYPerson, 类型为`TYPerson *__weak weakPerson;`
+
+```c++
+struct __main_block_impl_0 {
+  struct __block_impl impl;
+  struct __main_block_desc_0* Desc;
+  TYPerson *__weak weakPerson;
+  __main_block_impl_0(void *fp, struct __main_block_desc_0 *desc, TYPerson *__weak _weakPerson, int flags=0) : weakPerson(_weakPerson) {
+    impl.isa = &_NSConcreteStackBlock;
+    impl.Flags = flags;
+    impl.FuncPtr = fp;
+    Desc = desc;
+  }
+};
+```
+
+- 上面的如果将`__weak` 换成 `__strong`. 那么捕获进去的就是`TYPerson *__strong person`.
+- 但是无论是`__weak`还是`__strong`,`在 ARC 环境下,只要 block 在栈空间,而且没有被强引用,无论写__ weak 还是__ strong, 那么它都不会对外面的 TYPerson 进行强引用.`
+- 因为 block 在栈上,会随时被释放掉,所以它不会对别人进行强引用.
+- 如下就是 ARC 环境下, block 没有被强引用,在栈上
+
+```objc
+typedef void(^testBlock)(void);
+
+int main(int argc, const char * argv[]) {
+    @autoreleasepool {
+        
+        testBlock block;
+        
+        {
+            TYPerson *person = [[TYPerson alloc] init];
+            person.age = 30;
+            
+            __weak TYPerson *weakPerson = person;
+            
+            // 没有强引用 block. 无论上面是__weak 还是 __strong, 都不会对 TYPerson 强引用.
+            ^{
+                NSLog(@"%d",weakPerson.age);
+            };
+
+        }
+    
+        NSLog(@"-");
+        
+    }
+    return 0;
+}
+```
+
+**如果在 block 在堆上**
+
+```objc
+typedef void(^testBlock)(void);
+
+int main(int argc, const char * argv[]) {
+    @autoreleasepool {
+        
+        testBlock block;
+        
+        {
+            TYPerson *person = [[TYPerson alloc] init];
+            person.age = 30;
+            
+            __weak TYPerson *weakPerson = person;
+            //  ARC 环境下,block 被强引用着.自动执行 copy 操作,此时 block 在堆上.
+            block = ^{
+                NSLog(@"%d",weakPerson.age);
+            };
+
+        }
+    
+        NSLog(@"-");
+        
+    }
+    return 0;
+}
+```
+
+其中`__main_block_desc_0`这个结构当 `block在栈上和 block 在堆上,结果不同`.
+
+```c++
+// block 在堆上.
+static struct __main_block_desc_0 {
+  size_t reserved;
+  size_t Block_size;
+  
+  // 这个指针指向 `__main_block_copy_0 这个函数`
+  void (*copy)(struct __main_block_impl_0*, struct __main_block_impl_0*);
+  
+  // 这个指针指向 `__main_block_dispose_0` 这个函数
+  void (*dispose)(struct __main_block_impl_0*);
+} __main_block_desc_0_DATA = { 0, sizeof(struct __main_block_impl_0), __main_block_copy_0, __main_block_dispose_0};
+```
+
+- 当 block 进行一次 copy 操作的时候,它会自动调用`__main_block_copy_0` 这个函数.
+
+```c++
+static void __main_block_copy_0(struct __main_block_impl_0*dst, struct __main_block_impl_0*src) {
+
+// 这句会根据上面捕获进来的 TYPerson 类型,__weak 还是 __strong 来进行弱引用或强引用操作.
+_Block_object_assign((void*)&dst->weakPerson, (void*)src->weakPerson, 3/*BLOCK_FIELD_IS_OBJECT*/);
+
+}
+```
+
+- 而`__main_block_dispose_0`这个函数,当堆上的 block 被废弃时,会自动释放引用的 auto 变量,类似执行一次 release 操作
+
+```c++
+static void __main_block_dispose_0(struct __main_block_impl_0*src) {
+    _Block_object_dispose((void*)src->weakPerson, 3/*BLOCK_FIELD_IS_OBJECT*/);
+}
 ```
 

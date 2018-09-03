@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4C22C615213D7C4C00FA9E56 /* TYPerson.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C22C614213D7C4C00FA9E56 /* TYPerson.m */; };
 		4C953C25213BE98C00DE211B /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C953C24213BE98C00DE211B /* main.m */; };
 /* End PBXBuildFile section */
 
@@ -23,6 +24,11 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4C22C613213D7C4C00FA9E56 /* TYPerson.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TYPerson.h; sourceTree = "<group>"; };
+		4C22C614213D7C4C00FA9E56 /* TYPerson.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TYPerson.m; sourceTree = "<group>"; };
+		4C22C616213D7FB900FA9E56 /* main2.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main2.cpp; sourceTree = "<group>"; };
+		4C22C617213D802800FA9E56 /* main3.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main3.cpp; sourceTree = "<group>"; };
+		4C22C618213DEE4F00FA9E56 /* main4.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main4.cpp; sourceTree = "<group>"; };
 		4C953C21213BE98C00DE211B /* block-2Part-1 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "block-2Part-1"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4C953C24213BE98C00DE211B /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		4C953C2B213BF10D00DE211B /* main1.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main1.cpp; sourceTree = "<group>"; };
@@ -59,7 +65,12 @@
 			isa = PBXGroup;
 			children = (
 				4C953C2B213BF10D00DE211B /* main1.cpp */,
+				4C22C616213D7FB900FA9E56 /* main2.cpp */,
+				4C22C617213D802800FA9E56 /* main3.cpp */,
+				4C22C618213DEE4F00FA9E56 /* main4.cpp */,
 				4C953C24213BE98C00DE211B /* main.m */,
+				4C22C613213D7C4C00FA9E56 /* TYPerson.h */,
+				4C22C614213D7C4C00FA9E56 /* TYPerson.m */,
 			);
 			path = "block-2Part-1";
 			sourceTree = "<group>";
@@ -121,6 +132,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4C953C25213BE98C00DE211B /* main.m in Sources */,
+				4C22C615213D7C4C00FA9E56 /* TYPerson.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -239,7 +251,7 @@
 		4C953C29213BE98C00DE211B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_ENABLE_OBJC_ARC = NO;
+				CLANG_ENABLE_OBJC_ARC = YES;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = JJGBDF7PM8;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -249,7 +261,7 @@
 		4C953C2A213BE98C00DE211B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_ENABLE_OBJC_ARC = NO;
+				CLANG_ENABLE_OBJC_ARC = YES;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = JJGBDF7PM8;
 				PRODUCT_NAME = "$(TARGET_NAME)";

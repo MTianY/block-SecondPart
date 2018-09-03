@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "TYPerson.h"
 
 void test1() {
     void(^testBlock1)(void) = ^{
@@ -70,6 +71,8 @@ void test5() {
     };
 }
 
+typedef void(^testBlock)(void);
+
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
         
@@ -78,10 +81,30 @@ int main(int argc, const char * argv[]) {
 //        test3();
         
 //        test4();
+//
+//        test5();
+//
+//        test5Block();
         
-        test5();
+        testBlock block;
         
-        test5Block();
+        {
+            TYPerson *person = [[TYPerson alloc] init];
+            person.age = 30;
+            
+            __weak TYPerson *weakPerson = person;
+            block = ^{
+                NSLog(@"%d",weakPerson.age);
+            };
+            
+            // MRC 环境下 release
+//            [person release];
+            
+        }
+        
+        
+    
+        NSLog(@"-");
         
     }
     return 0;
