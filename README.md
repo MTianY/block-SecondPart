@@ -458,11 +458,69 @@ _Block_object_assign((void*)&dst->weakPerson, (void*)src->weakPerson, 3/*BLOCK_F
 }
 ```
 
-- 而`__main_block_dispose_0`这个函数,当堆上的 block 被废弃时,会自动释放引用的 auto 变量,类似执行一次 release 操作
+- 而`__main_block_dispose_0`这个函数,当堆上的 block 被废弃时,会断开对 auto 变量的强引用,类似执行一次 release 操作,如果 auto 变量的引用计数为0,则释放
 
 ```c++
 static void __main_block_dispose_0(struct __main_block_impl_0*src) {
     _Block_object_dispose((void*)src->weakPerson, 3/*BLOCK_FIELD_IS_OBJECT*/);
+}
+```
+
+## 五. GCD 的 block
+
+建立一个 iOS 项目,有一个`TYPerson`类.其中有个属性`age`.执行如下操作,看其释放时机.
+
+### 5.1 情况一:
+
+点击控制器的 view,会先打印 `age1 = 10`, 然后`立即`释放掉`TYPerson`.
+
+```objc
+- (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    
+    TYPerson *person = [[TYPerson alloc] init];
+    person.age = 10;
+    NSLog(@"age1 = %d",person.age);
+}
+```
+
+### 5.2 情况二:
+
+person 对象被 GCD 的 block 持有.它会自动对 person 执行一次`copy`操作,强引用它,然后当 block 销毁时,断开强引用, person 引用计数为0,释放掉 person 对象.
+
+- 所以下面的操作应该是先打印 `age1 = 10`.
+- 然后过3秒之后,打印`age2 = 10`.与此同时, block 释放掉,从而 person 释放掉.
+
+```objc
+- (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    
+    TYPerson *person = [[TYPerson alloc] init];
+    person.age = 10;
+    NSLog(@"age1 = %d",person.age);
+    
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        NSLog(@"age2 = %d",person.age);
+    });
+    
+}
+```
+
+### 5.3 情况三:
+
+如下,使用`__weak` 弱引用 TYPerson 对象,那么 block 就不会对 person 对象产生强引用.所以在打印完`age1 = 10;`之后,立即释放掉 person 对象,然后过3秒中, block 释放掉,此时打印 age2 = 0; 因为之前 person 对象已经被释放掉了.
+
+```objc
+- (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    
+    TYPerson *person = [[TYPerson alloc] init];
+    person.age = 10;
+    NSLog(@"age1 = %d",person.age);
+    
+    
+    __weak TYPerson *weakPerson = person;
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        NSLog(@"age2 = %d",weakPerson.age);
+    });
+    
 }
 ```
 
